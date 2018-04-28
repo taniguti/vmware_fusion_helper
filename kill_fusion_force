@@ -1,0 +1,12 @@
+#!/bin/bash
+
+FusionPID=`ps x|grep "/[M]acOS/VMware Fusion" |awk '{print $1}'`
+
+if [ "${FusionPID:-X}" = "X" ]; then
+	echo "VMware Fusion Frontend application does not run."
+	echo "Nothing to do."
+else
+	echo "VMware Fusion Frontend application is running. (PID is ${FusionPID})"
+	echo "Terminate now ( Execute kill -9 ${FusionPID} )"
+	kill -9 ${FusionPID}
+fi

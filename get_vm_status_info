@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "# PID %CPU %MEM %VMFILE"
+\ps aux | grep \.vmx |grep -v grep | tr  '/' ' ' | awk '{print $2,$3,$4,$NF}'
+

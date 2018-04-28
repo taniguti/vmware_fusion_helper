@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
+	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" 
+	echo "VMware Fusion TechPreview was found"
+elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then 
+	VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
+	echo "VMWre fusion was found."
+else
+	echo "vmrun was not found. Bye"
+	exit 0
+fi
+
+VMX="$1"
+SNAPSHOT_NAME="$2"
+
+if [ "${VMX:-X}" = X ]; then
+	"${VMRUN}" list | grep -v "Total running VMs" |awk -F/ '{print $(NF -1)}'
+	/bin/echo -n "Choose one: "
+	while read CHOOSE 
+	do
+		VMX=`"${VMRUN}" list  | grep "$CHOOSE"`
+		if [ -f "$VMX" ]; then
+			break
+		else
+			/bin/echo -n "Choose one: "
+		fi
+	done
+else
+	
+	TGT=`"${VMRUN}" list | grep "${VMX}"`
+	if [ ! -f "${TGT}" ]; then
+		echo "That VM: $VMX is not running now."
+		echo "Bye."
+		exit 1
+	else
+		VMX="$TGT"
+	fi
+fi
+
+#echo $VMX
+#echo ${SNAPSHOT_NAME:-`date +%Y-%m-%d-%H%M%S`}
+
+"${VMRUN}" -T fusion snapshot "${VMX}" "${SNAPSHOT_NAME:-`date +%Y-%m-%d-%H%M%S`}"
