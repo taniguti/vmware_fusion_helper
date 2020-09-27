@@ -4,7 +4,19 @@
 # Functions
 function show_help () {
     cat << _HELP
-    $0 -c [stop | restart | reset ] [ -n vm_name | -a ]
+    $0 -c [stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ]
+    $0 -h
+
+    -h: Show this message.
+    -c:
+        stop: stop vm. alias: halt, shutdown.
+        restart: stop and then start vm.
+        reset: reboot vm. alias: reboot.
+        pause: Pause vm. Paused vm is still running.
+        unpause: Unpause vm.
+        suspend: Suspend vm. The vm process will exit.
+    -a: to all of VMs.
+    -n: give a target name.
 _HELP
 }
 
@@ -81,8 +93,16 @@ do
 done
 
 case "${cmdvm:-x}" in
-    stop | restart | reset )
+    stop | restart | reset | suspend | pause | unpause )
         : ok
+        ;;
+    reboot )
+        echo "cmd: reboot => reset"
+        cmdvm=reset
+        ;;
+    halt | shutdown )
+        echo "cmd: $cmdvm => stop"
+        cmdvm=stop
         ;;
     * )
         show_help
