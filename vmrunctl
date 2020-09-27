@@ -1,0 +1,132 @@
+#!/bin/bash
+# vim: set ts=4 sw=4 sts=0 et ft=sh fenc=utf-8 ff=unix :
+
+# Functions
+function show_help () {
+    cat << _HELP
+    $0 -c [stop | restart | reset ] [ -n vm_name | -a ]
+_HELP
+}
+
+function stop_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion stop "$VM"
+}
+
+function restart_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion stop "$VM"
+    vmrun -T fusion start "$VM"
+}
+
+function reset_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion reset "$VM"
+}
+
+function pause_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion pause "$VM"
+}
+
+function unpause_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion unpause "$VM"
+}
+
+function suspend_vm() {
+    local VM
+    VM="$1"
+    vmrun -T fusion suspend "$VM"
+}
+
+# Check
+if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
+	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun"
+	: "VMware Fusion TechPreview was found"
+elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then
+	VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
+	: "VMWre fusion was found."
+else
+	echo "vmrun was not found. Bye"
+	exit 0
+fi
+
+while getopts ac:n:h sw
+do
+    case $sw in
+        a )
+            vmname=ALL
+            ;;
+        c )
+            cmdvm="$( echo "$OPTARG" | tr "[:upper:]" "[:lower:]" )"
+            ;;
+        h )
+            show_help
+            exit 0
+            ;;
+        n)
+            vmname="$OPTARG"
+            ;;
+        * )
+            show_help
+            exit 0
+            ;;
+    esac
+done
+
+case "${cmdvm:-x}" in
+    stop | restart | reset )
+        : ok
+        ;;
+    * )
+        show_help
+        exit 1
+        ;;
+esac
+
+if [ -z "$vmname" ]; then
+    choice=1
+else
+    choice=0
+fi
+
+if [ "$vmname" = ALL ]; then
+     echo "$cmdvm all vms"
+    "$VMRUN" list | awk 'NR > 1' | while read -r path_to_vmx
+    do
+        echo "$cmdvm $path_to_vmx"
+        "${cmdvm}_vm" "$path_to_vmx"
+    done
+else
+    if [ "$choice" = 1 ]; then
+        "$VMRUN" list | awk -F '/' '{print $NF}' | sed s/\.vmx$//g
+        /bin/echo -n "Choose vm: "
+        while read -r choicevm
+        do
+            path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
+            if [ -f "$path_to_vmx" ]; then
+                : choose correct.
+                break
+            fi
+            /bin/echo -n "Choose vm: "
+        done
+        echo "$cmdvm $vmname"
+        "${cmdvm}_vm" "$path_to_vmx"
+    else
+        choicevm="${vmname//.vmx/}"
+        path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
+        if [ ! -f "$path_to_vmx" ]; then
+            echo "Not runing $vmname. ($path_to_vmx) !"
+            exit 1
+        fi
+        echo "$cmdvm $vmname"
+        "${cmdvm}_vm" "$path_to_vmx"
+    fi
+fi
+echo "done"
