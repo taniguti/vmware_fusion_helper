@@ -1,34 +1,4 @@
 #!/bin/bash
+# vim: set ts=4 sw=4 sts=0 et ft=sh fenc=utf-8 ff=unix :
 
-if [ `whoami` != root ]; then
-    sudo $0
-    exit $?
-fi
-
-if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
-	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" 
-	echo "VMware Fusion TechPreview was found"
-elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then 
-	VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
-	echo "VMWre fusion was found."
-else
-	echo "vmrun was not found. Bye"
-	exit 0
-fi
-
-echo "Create script for suspending for all vms..."
-
-WDIR="/tmp/`uuidgen`/$$"
-mkdir -p "$WDIR"
-CMD="${WDIR}/suspend.sh"
-
-echo "#!/bin/sh" > "$CMD"
-echo "" >> "$CMD"
-echo "VMRUN=\"$VMRUN\"" >> "$CMD"
-"$VMRUN" list|grep vmx | awk '{print "\"$VMRUN\" -T fusion suspend " "\""$0"\""}' >> "$CMD"
-echo "... Done; Script is $CMD."
-cat "$CMD"
-echo "Execute now."
-sh -x "$CMD"
-echo "Done."
-
+./vmrunctl -a -c suspend
