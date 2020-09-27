@@ -25,6 +25,11 @@ vmdir="$(
     )"
 
 vmname="$1"
+mode=gui
+if [ "$( echo "$2" | tr "[:upper:]" "[:lower:]" )" = nogui ]; then
+    mode=nogui
+fi
+
 if [ -z "$vmname" ]; then
     vmname="$( uuidgen )"
 fi
@@ -65,6 +70,6 @@ fi
 if [ -n "$( awk -v V="$vmname" '$1 == V {print NR }' "${tempfile}-1" )" ]; then
     echo "$vmname ($file_path) is already running."
 else
-    "$VMRUN" -T fusion start "$file_path"
+    "$VMRUN" -T fusion start "$file_path" "$mode"
 fi
 rm -f "$tempfile" "${tempfile}-1"
