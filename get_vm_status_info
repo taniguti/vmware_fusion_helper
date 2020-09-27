@@ -1,5 +1,15 @@
 #!/bin/bash
+# vim: set ts=4 sw=4 sts=0 et ft=sh fenc=utf-8 ff=unix :
 
-echo "# PID %CPU %MEM %VMFILE"
-\ps aux | grep \.vmx |grep -v grep | tr  '/' ' ' | awk '{print $2,$3,$4,$NF}'
+tempfile="$( mktemp )"
+ps -p "$( pgrep \.vmx )" -o pid -o %cpu -o %mem -o command > "$tempfile"
 
+if [ "$( wc -l < "$tempfile" )" = 1 ]; then
+    echo "No vm runs."
+    exit 0
+else
+    head -1 "$tempfile" | tr -d '%' | sed s/COMMAND/VM_FILE/g > "${tempfile}-1"
+    tr '/' ' ' < "$tempfile" | awk 'NR > 1 { print $1,$2,$3,$NF }' >> "${tempfile}-1"
+    column -t "${tempfile}-1"
+fi
+rm -f  "$tempfile" "${tempfile}-1"
