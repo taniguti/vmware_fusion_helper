@@ -4,12 +4,13 @@
 # Functions
 function show_help () {
     cat << _HELP
-    $0 -c [start | stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ]
+    $0 -c [start | stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ] [ -x ]
     $0 -h
 
     -h: Show this message.
     -c:
         start: start vm.
+            -x: start vm without GUI.
         stop: stop vm. alias: halt, shutdown.
         restart: stop and then start vm.
         reset: reboot vm. alias: reboot.
@@ -70,7 +71,7 @@ else
 	exit 0
 fi
 
-while getopts ac:n:h sw
+while getopts ac:n:hx sw
 do
     case $sw in
         a )
@@ -86,7 +87,10 @@ do
         n)
             vmname="$OPTARG"
             ;;
-        * )
+        x)
+            mode=nogui
+            ;;
+        h|* )
             show_help
             exit 0
             ;;
@@ -123,7 +127,7 @@ fi
 
 case "$cmdvm" in
     start )
-        start_vm "$vmname"
+        start_vm "${vmname:-x}" "$mode"
         ;;
     * )
         if [ "$vmname" = ALL ]; then

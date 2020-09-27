@@ -70,6 +70,7 @@ fi
 if [ -n "$( awk -v V="$vmname" '$1 == V {print NR }' "${tempfile}-1" )" ]; then
     echo "$vmname ($file_path) is already running."
 else
+    echo "Start $vmname($file_path). mode: $mode"
     "$VMRUN" -T fusion start "$file_path" "$mode"
 fi
 rm -f "$tempfile" "${tempfile}-1"
