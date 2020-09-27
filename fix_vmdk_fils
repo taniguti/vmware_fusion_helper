@@ -1,28 +1,31 @@
 #!/bin/bash
+# vim: set ts=4 sw=4 sts=0 et ft=sh fenc=utf-8 ff=unix :
+
 LOG=/tmp/fix-vmdk.log
 LOG_ERR=/tmp/fix-vmdk-error.log
 DRY=""
 
-cd "$1"
-CHK=`ls *0*.vmdk| wc -l`
-if [ ${CHK:-0} -eq 0 ]; then
+cd "$1" || exit 1
+
+CHK="$( ls *0*.vmdk| wc -l )"
+
+if [ "${CHK:-0}" -eq 0 ]; then
     echo "Target: $PWD"
     echo "$0 /path/to/vmwarevm_dir"
     exit 0
 fi
 
-cat /dev/null > $LOG
-cat /dev/null > $LOG_ERR
-echo "Log files: $LOG $LOG_ERR
+echo "Log files: $LOG , $LOG_ERR"
+
 for i in `ls *0*.vmdk`
 do
-    echo "`date +%F-%T`: $i start." |tee -a $LOG
+    echo "$( date +%F-%T ): $i start." | tee -a "$LOG"
     $DRY dd if="$i" of="/tmp/$i" conv=noerror,sync >> $LOG_ERR 2>&1
     CODE=$?
-    echo "`date +%F-%T`: $i finished with CODE: $CODE." |tee -a $LOG
+    echo "$( date +%F-%T ): $i finished with CODE: $CODE." |tee -a "$LOG"
     if [ $CODE = 0 ]; then
-        $DRY /bin/mv /tmp/$i $i
+        $DRY /bin/mv "/tmp/$i" "$i"
     else
-        $DRY /bin/rm /tmp/$i
+        $DRY /bin/rm -f "/tmp/$i"
     fi
 done
