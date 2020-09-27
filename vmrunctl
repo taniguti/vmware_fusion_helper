@@ -21,43 +21,6 @@ function show_help () {
 _HELP
 }
 
-function stop_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion stop "$VM"
-}
-
-function restart_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion stop "$VM"
-    vmrun -T fusion start "$VM"
-}
-
-function reset_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion reset "$VM"
-}
-
-function pause_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion pause "$VM"
-}
-
-function unpause_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion unpause "$VM"
-}
-
-function suspend_vm() {
-    local VM
-    VM="$1"
-    vmrun -T fusion suspend "$VM"
-}
-
 # Check
 if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
 	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun"
@@ -69,6 +32,43 @@ else
 	echo "vmrun was not found. Bye"
 	exit 0
 fi
+
+function stop_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion stop "$VM"
+}
+
+function restart_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion stop "$VM"
+    "$VMRUN" -T fusion start "$VM"
+}
+
+function reset_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion reset "$VM"
+}
+
+function pause_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion pause "$VM"
+}
+
+function unpause_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion unpause "$VM"
+}
+
+function suspend_vm() {
+    local VM
+    VM="$1"
+    "$VMRUN" -T fusion suspend "$VM"
+}
 
 while getopts ac:n:h sw
 do
