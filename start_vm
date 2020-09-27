@@ -1,0 +1,65 @@
+#!/bin/bash
+# vim: set ts=4 sw=4 sts=0 et ft=sh fenc=utf-8 ff=unix :
+
+# Check
+if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
+        VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun"
+        : "VMware Fusion TechPreview was found"
+elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then
+        VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
+        : "VMWre fusion was found."
+else
+        echo "Nt found: vmrun. Bye"
+        exit 0
+fi
+
+plist="${HOME}/Library/Preferences/com.vmware.fusion.plist"
+if [ ! -f "$plist" ]; then
+    echo "Not found: $plist"
+    exit 1
+fi
+
+vmdir="$(
+    /usr/libexec/PlistBuddy -c "print NSNavLastRootDirectory" "$plist" \
+    | sed -e "s!^~!$HOME!"
+    )"
+
+vmname="$1"
+if [ -z "$vmname" ]; then
+    vmname="$( uuidgen )"
+fi
+
+if [ -f "$vmname" ]; then
+    if [ "$( echo "$vmname" | awk -F. '{print $NF}' )" = vmx ]; then
+        file_path="$vmname"
+    else
+        file_path=x
+    fi
+elif [ -f "${vmname}.vmx:" ]; then
+    file_path="${vmname}.vmx"
+elif [ -d "${vmname}.vmwarevm" ]; then
+    file_path="${vmname}.vmwarevm"
+elif [ -f "${vmdir}/$vmname" ]; then
+    file_path="${vmdir}/$vmname"
+elif [ -d "${vmdir}/${vmname}.vmwarevm" ]; then
+    file_path="${vmdir}/${vmname}.vmwarevm"
+else
+    file_path=x
+fi
+
+if [ "$file_path" = x ]; then
+    stat -f %N "${vmdir}/"*.vmwarevm | awk -F"[./]" '{print $(NF - 1)}'
+    /bin/echo -n "Choose one: "
+    while read -r vmname
+    do
+        if [ -d "${vmdir}/${vmname}.vmwarevm" ]; then
+            file_path="${vmdir}/${vmname}.vmwarevm"
+            break
+        fi
+        /bin/echo -n "Choose one: "
+    done
+fi
+
+echo "Start $vmname ($file_path)"
+"$VMRUN" -T fusion start "$file_path"
+echo "done."
