@@ -57,7 +57,7 @@ tempfile="$( mktemp )"
 if [ "$file_path" = x ]; then
     stat -f %N "${vmdir}/"*.vmwarevm | awk -F"[./]" '{print $(NF - 1)}' | sort > "$tempfile"
     comm -23 "$tempfile" "${tempfile}-1"
-    /bin/echo -n "Choose one: "
+    /bin/echo -n "Choose one(mode: $mode): "
     while read -r vmname
     do
         if [ -d "${vmdir}/${vmname}.vmwarevm" ]; then

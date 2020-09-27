@@ -1,9 +1,9 @@
 #!/bin/bash
 
 if [ -x "/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" ] ; then
-	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun" 
+	VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun"
 	echo "VMware Fusion TechPreview was found"
-elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then 
+elif [ -x "/Applications/VMware Fusion.app/Contents/Library/vmrun" ] ;then
 	VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
 	echo "VMWre fusion was found."
 else
@@ -17,7 +17,7 @@ SNAPSHOT_NAME="$2"
 if [ "${VMX:-X}" = X ]; then
 	"${VMRUN}" list | grep -v "Total running VMs" |awk -F/ '{print $(NF -1)}'
 	/bin/echo -n "Choose one: "
-	while read CHOOSE 
+	while read CHOOSE
 	do
 		VMX=`"${VMRUN}" list  | grep "$CHOOSE"`
 		if [ -f "$VMX" ]; then
@@ -27,7 +27,7 @@ if [ "${VMX:-X}" = X ]; then
 		fi
 	done
 else
-	
+
 	TGT=`"${VMRUN}" list | grep "${VMX}"`
 	if [ ! -f "${TGT}" ]; then
 		echo "That VM: $VMX is not running now."
