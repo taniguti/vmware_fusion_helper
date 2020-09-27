@@ -4,11 +4,12 @@
 # Functions
 function show_help () {
     cat << _HELP
-    $0 -c [stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ]
+    $0 -c [start | stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ]
     $0 -h
 
     -h: Show this message.
     -c:
+        start: start vm.
         stop: stop vm. alias: halt, shutdown.
         restart: stop and then start vm.
         reset: reboot vm. alias: reboot.
@@ -93,14 +94,18 @@ do
 done
 
 case "${cmdvm:-x}" in
-    stop | restart | reset | suspend | pause | unpause )
+    start | stop | restart | reset | suspend | pause | unpause )
         : ok
+        ;;
+    launch | up )
+        echo "cmd: $cmdvm => start"
+        cmdvm=start
         ;;
     reboot )
         echo "cmd: reboot => reset"
         cmdvm=reset
         ;;
-    halt | shutdown )
+    halt | shutdown | down )
         echo "cmd: $cmdvm => stop"
         cmdvm=stop
         ;;
@@ -116,37 +121,44 @@ else
     choice=0
 fi
 
-if [ "$vmname" = ALL ]; then
-     echo "$cmdvm all vms"
-    "$VMRUN" list | awk 'NR > 1' | while read -r path_to_vmx
-    do
-        echo "$cmdvm $path_to_vmx"
-        "${cmdvm}_vm" "$path_to_vmx"
-    done
-else
-    if [ "$choice" = 1 ]; then
-        "$VMRUN" list | awk -F '/' '{print $NF}' | sed s/\.vmx$//g
-        /bin/echo -n "Choose vm: "
-        while read -r choicevm
-        do
-            path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
-            if [ -f "$path_to_vmx" ]; then
-                : choose correct.
-                break
+case "$cmdvm" in
+    start )
+        start_vm "$vmname"
+        ;;
+    * )
+        if [ "$vmname" = ALL ]; then
+            echo "$cmdvm all vms"
+            "$VMRUN" list | awk 'NR > 1' | while read -r path_to_vmx
+            do
+                echo "$cmdvm $path_to_vmx"
+                "${cmdvm}_vm" "$path_to_vmx"
+            done
+        else
+            if [ "$choice" = 1 ]; then
+                "$VMRUN" list | awk -F '/' '{print $NF}' | sed s/\.vmx$//g
+                /bin/echo -n "Choose vm: "
+                while read -r choicevm
+                do
+                    path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
+                    if [ -f "$path_to_vmx" ]; then
+                        : choose correct.
+                        break
+                    fi
+                    /bin/echo -n "Choose vm: "
+                done
+                echo "$cmdvm $vmname"
+                "${cmdvm}_vm" "$path_to_vmx"
+            else
+                choicevm="${vmname//.vmx/}"
+                path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
+                if [ ! -f "$path_to_vmx" ]; then
+                    echo "Not runing $vmname. ($path_to_vmx) !"
+                    exit 1
+                fi
+                echo "$cmdvm $vmname"
+                "${cmdvm}_vm" "$path_to_vmx"
             fi
-            /bin/echo -n "Choose vm: "
-        done
-        echo "$cmdvm $vmname"
-        "${cmdvm}_vm" "$path_to_vmx"
-    else
-        choicevm="${vmname//.vmx/}"
-        path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
-        if [ ! -f "$path_to_vmx" ]; then
-            echo "Not runing $vmname. ($path_to_vmx) !"
-            exit 1
         fi
-        echo "$cmdvm $vmname"
-        "${cmdvm}_vm" "$path_to_vmx"
-    fi
-fi
+        ;;
+esac
 echo "done"

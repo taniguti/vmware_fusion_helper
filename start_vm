@@ -47,8 +47,11 @@ else
     file_path=x
 fi
 
+tempfile="$( mktemp )"
+"$VMRUN" list | awk -F"[./]" '$NF == "vmx" { print $(NF-1)}' | sort > "${tempfile}-1"
 if [ "$file_path" = x ]; then
-    stat -f %N "${vmdir}/"*.vmwarevm | awk -F"[./]" '{print $(NF - 1)}'
+    stat -f %N "${vmdir}/"*.vmwarevm | awk -F"[./]" '{print $(NF - 1)}' | sort > "$tempfile"
+    comm -23 "$tempfile" "${tempfile}-1"
     /bin/echo -n "Choose one: "
     while read -r vmname
     do
@@ -59,7 +62,9 @@ if [ "$file_path" = x ]; then
         /bin/echo -n "Choose one: "
     done
 fi
-
-echo "Start $vmname ($file_path)"
-"$VMRUN" -T fusion start "$file_path"
-echo "done."
+if [ -n "$( awk -v V="$vmname" '$1 == V {print NR }' "${tempfile}-1" )" ]; then
+    echo "$vmname ($file_path) is already running."
+else
+    "$VMRUN" -T fusion start "$file_path"
+fi
+rm -f "$tempfile" "${tempfile}-1"
