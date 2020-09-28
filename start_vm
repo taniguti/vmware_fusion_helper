@@ -37,15 +37,20 @@ fi
 if [ -f "$vmname" ]; then
     if [ "$( echo "$vmname" | awk -F. '{print $NF}' )" = vmx ]; then
         file_path="$vmname"
+        vmname="$( basename "${vmname/.vmx/}" )"
     else
         file_path=x
     fi
-elif [ -f "${vmname}.vmx:" ]; then
-    file_path="${vmname}.vmx"
+elif [ -d "$vmname" ]; then
+    if [ "$( echo "$vmname" | awk -F. '{print $NF}' )" = vmwarevm ]; then
+        file_path="$vmname"
+        vmname="$( basename "${vmname/.vmwarevm/}" )"
+    else
+        file_path=x
+    fi
 elif [ -d "${vmname}.vmwarevm" ]; then
     file_path="${vmname}.vmwarevm"
-elif [ -f "${vmdir}/$vmname" ]; then
-    file_path="${vmdir}/$vmname"
+    vmname="$( basename "${vmname}" )"
 elif [ -d "${vmdir}/${vmname}.vmwarevm" ]; then
     file_path="${vmdir}/${vmname}.vmwarevm"
 else
