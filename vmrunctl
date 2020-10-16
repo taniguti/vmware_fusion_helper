@@ -4,13 +4,13 @@
 # Functions
 function show_help () {
     cat << _HELP
-    $0 -c [start | stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ] [ -x ]
+    $0 -c [start | stop | restart | reset | suspend | pause | unpause ] [ -n vm_name | -a ] [ -g ]
     $0 -h
 
     -h: Show this message.
     -c:
         start: start vm.
-            -x: start vm without GUI.
+            -g: start vm with GUI (default: nogui).
         stop: stop vm. alias: halt, shutdown.
         restart: stop and then start vm.
         reset: reboot vm. alias: reboot.
@@ -33,6 +33,8 @@ else
 	echo "vmrun was not found. Bye"
 	exit 0
 fi
+
+mode=nogui
 
 function _readlink(){
     c="$1"
@@ -60,10 +62,11 @@ function stop_vm() {
 }
 
 function restart_vm() {
-    local VM
+    local VM M
     VM="$1"
+    M="$2"
     "$VMRUN" -T fusion stop "$VM"
-    "$VMRUN" -T fusion start "$VM"
+    "$VMRUN" -T fusion start "$VM" "$M"
 }
 
 function reset_vm() {
@@ -90,7 +93,7 @@ function suspend_vm() {
     "$VMRUN" -T fusion suspend "$VM"
 }
 
-while getopts ac:n:hx sw
+while getopts ac:n:hg sw
 do
     case $sw in
         a )
@@ -106,8 +109,8 @@ do
         n)
             vmname="$OPTARG"
             ;;
-        x)
-            mode=nogui
+        g)
+            mode=gui
             ;;
         * )
             show_help
@@ -154,7 +157,7 @@ case "$cmdvm" in
             "$VMRUN" list | awk 'NR > 1' | while read -r path_to_vmx
             do
                 echo "$cmdvm $path_to_vmx"
-                "${cmdvm}_vm" "$path_to_vmx"
+                "${cmdvm}_vm" "$path_to_vmx" "$mode"
             done
         else
             if [ "$choice" = 1 ]; then
@@ -170,7 +173,7 @@ case "$cmdvm" in
                     /bin/echo -n "Choose vm: "
                 done
                 echo "$cmdvm $vmname"
-                "${cmdvm}_vm" "$path_to_vmx"
+                "${cmdvm}_vm" "$path_to_vmx" "$mode"
             else
                 choicevm="${vmname//.vmx/}"
                 path_to_vmx="$( "$VMRUN" list | grep -E "/${choicevm}.vmx"$ )"
@@ -179,7 +182,7 @@ case "$cmdvm" in
                     exit 1
                 fi
                 echo "$cmdvm $vmname"
-                "${cmdvm}_vm" "$path_to_vmx"
+                "${cmdvm}_vm" "$path_to_vmx" "$mode"
             fi
         fi
         ;;
